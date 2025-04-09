@@ -1,0 +1,232 @@
+---
+title: "Monitoring Dental Use & Costs - Data From Medical Expenditure Panel Survey"
+format:
+  dashboard:
+     theme: default
+     orientation: rows
+     nav-buttons:
+      - icon: github
+        href: https://github.com/jpedroza1228/data_monitoring_app
+      - icon: book
+        href: https://meps.ahrq.gov/mepsweb/data_stats/download_data_files_codebook.jsp?PUFId=H245&sortBy=Start
+---
+
+```{python}
+import pandas as pd
+import numpy as np
+#import plotnine as pn
+import plotly.express as px
+#from scipy import stats
+from janitor import clean_names
+#import seaborn as sns
+from great_tables import GT
+import matplotlib.pyplot as plt
+from IPython.display import Markdown
+
+# from sklearn.model_selection import train_test_split
+# from sklearn.utils.class_weight import compute_class_weight
+# from tensorflow.random import set_seed
+# from sklearn.ensemble import RandomForestClassifier as rfc
+# from sklearn.metrics import accuracy_score, confusion_matrix, mean_absolute_error
+# from sklearn.preprocessing import StandardScaler, LabelEncoder
+# from sklearn.inspection import permutation_importance
+# from tensorflow.keras.utils import to_categorical
+# from sklearn.model_selection import KFold, GridSearchCV
+```
+
+```{python}
+
+import requests
+from bs4 import BeautifulSoup
+from urllib.request import urlopen
+
+url = 'https://meps.ahrq.gov/mepsweb/data_stats/download_data_files_codebook.jsp?PUFId=H245&sortBy=Start'
+
+response = requests.get(url)
+response.raise_for_status() 
+
+soup = BeautifulSoup(response.content, 'lxml')
+
+tables = soup.find_all('table')
+
+target_table = None
+for table in tables:
+    if table.get('summary') == 'table navigation':
+        target_table = table
+        break
+
+if target_table is None:
+    raise ValueError("Couldn't find the target table.")
+
+# Extract rows
+rows = target_table.find_all('tr')
+
+# Extract cell data
+data = []
+for row in rows:
+    cols = row.find_all(['td', 'th'])
+    cols_text = [col.get_text(strip = True) for col in cols]
+    if cols_text:
+        data.append(cols_text)
+
+# Convert to DataFrame if consistent
+table_df = pd.DataFrame(data)
+
+table_df = table_df.iloc[:, [0, 3]]
+
+# table_df[0].str.contains('^sex')
+
+table_df = table_df.loc[(table_df[0].str.contains('^PID$|^SEX|^DVT(?:OTY|EXPY)'))]
+
+```
+
+```{python}
+long = pd.read_csv('/home/jon/Documents/github_repos/data_monitoring_app/panel24_long_data.csv').clean_names(case_type = 'snake')
+
+sub_visit = long.filter(regex = '^pid$|^sex|^dvtoty')
+sub_amount = long.filter(regex = '^pid$|^sex|^dvtexpy')
+
+male = sub_visit['sex'].value_counts()[1]
+total = sub_visit['sex'].value_counts().sum()
+male_pct = (male/total)*100
+
+sub_long_visit = sub_visit.melt(
+  id_vars = ['pid', 'sex'],
+  value_vars = sub_visit.drop(columns = ['pid', 'sex']).columns)
+
+sub_long_amount = sub_amount.melt(
+  id_vars = ['pid', 'sex'],
+  value_vars = sub_amount.drop(columns = ['pid', 'sex']).columns)
+
+sub_long_visit['value'] = sub_long_visit['value'].replace(-1, 0)
+#sub_long_visit['value'].value_counts().sort_values()
+
+sub_long_amount['value'] = sub_long_amount['value'].replace(-1, 0)
+#sub_long_amount['value'].value_counts().sort_values()
+
+sub_long_visit = sub_long_visit.groupby(['sex', 'variable'])['value'].agg(['sum', 'max', 'mean']).reset_index()
+
+sub_long_visit = sub_long_visit.melt(
+  id_vars = ['sex', 'variable'], 
+  value_vars = ['sum', 'max', 'mean'],
+  var_name = 'stat',
+  value_name = 'stat_value'
+  )
+
+
+sub_long_amount = sub_long_amount.groupby(['sex', 'variable'])['value'].agg(['sum', 'max', 'mean']).reset_index()
+
+sub_long_amount = sub_long_amount.melt(
+  id_vars = ['sex', 'variable'], 
+  value_vars = ['sum', 'max', 'mean'],
+  var_name = 'stat',
+  value_name = 'stat_value'
+  )
+
+```
+
+## Row
+
+```{python}
+#| content: valuebox
+#| title: "Male Percentage in Sample"
+#| color: primary
+dict(
+  icon = 'card-list',
+  value = 47.03 # male_pct.round(2)
+)
+```
+
+```{python}
+#| content: valuebox
+#| title: "Average Number of Dental Visits"
+#| color: primary
+dict(
+  icon = 'card-list',
+  value = 0.87 # sub_long_visit.loc[(sub_long_visit['stat'] == 'mean')]['stat_value'].mean().round(2)
+)
+```
+
+```{python}
+#| content: valuebox
+#| title: "Average Amount Spent on Dental Care"
+#| color: primary
+dict(
+  icon = 'cash-coin',
+  value = 331.01 # sub_long_amount.loc[(sub_long_visit['stat'] == 'mean')]['stat_value'].mean().round(2)
+)
+```
+
+## Row 
+
+### Column {width=35%}
+
+```{python}
+GT(table_df)
+```
+
+### Column {.tabset, width=65%}
+
+```{python}
+#| title: Number of Visits To the Dentist Between Sexes
+
+visit_line = px.line(
+    sub_long_visit, 
+    x = 'variable', 
+    y = 'stat_value',
+    color = 'sex',
+    facet_col = 'stat'
+    )
+visit_line.update_yaxes(matches = None, row = 1)
+
+# visit_line.update_layout(
+#     xaxis = dict(
+#         tickmode = 'array',
+#         tickvals = ['dvtoty1', 'dvtoty2', 'dvtoty3', 'dvtoty4'],
+#         ticktext = ['2019', '2020', '2021', '2022']
+#     )
+# )
+# 
+
+# visit_line.update_xaxes(title_text = '')
+# 
+# visit_line.for_each_yaxis(lambda yaxis: yaxis.update(showticklabels = True, matches = None))
+# visit_line.for_each_xaxis(lambda xaxis: xaxis.update(
+#         tickmode = 'array',
+#         tickvals = ['dvtoty1', 'dvtoty2', 'dvtoty3', 'dvtoty4'],
+#         ticktext = ['2019', '2020', '2021', '2022'],
+#         title_text = ''
+#     ))
+```
+
+```{python}
+#| title: Amount Spent At the Dentist Between Sexes
+
+amount_line = px.line(
+    sub_long_amount, 
+    x = 'variable', 
+    y = 'stat_value',
+    color = 'sex',
+    facet_col = 'stat'
+    )
+amount_line.update_yaxes(matches = None, row = 1)
+
+# amount_line.update_layout(
+#     xaxis = dict(
+#         tickmode = 'array',
+#         tickvals = ['dvtexpy1', 'dvtexpy2', 'dvtexpy3', 'dvtexpy4'],
+#         ticktext = ['2019', '2020', '2021', '2022']
+#     )
+# )
+
+# amount_line.for_each_yaxis(lambda yaxis: yaxis.update(showticklabels = True))
+# amount_line.update_xaxes(title_text = '')
+
+# amount_line.for_each_yaxis(lambda yaxis: yaxis.update(showticklabels = True, matches = None))
+# amount_line.for_each_xaxis(lambda xaxis: xaxis.update(
+#         tickmode = 'array',
+#         tickvals = ['dvtexpy1', 'dvtexpy2', 'dvtexpy3', 'dvtexpy4'],
+#         ticktext = ['2019', '2020', '2021', '2022'],
+#         title_text = ''
+#     ))
+```
