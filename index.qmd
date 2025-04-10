@@ -206,12 +206,10 @@ dict(
 )
 ```
 
-## Row {.tabset}
+## Row 
 
 ```{python}
 #| title: Average Number of Visits To the Dentist Between Sexes
-
-plt.clf()
 
 pn.ggplot.show(
   pn.ggplot(sub_long_visit.loc[sub_long_visit['stat'] == 'mean'], pn.aes('variable', 'stat_value'))
