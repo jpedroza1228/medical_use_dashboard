@@ -36,6 +36,8 @@ from IPython.display import Markdown
 ```
 
 ```{python}
+#| eval: false
+#| echo: false
 
 import requests
 from bs4 import BeautifulSoup
@@ -205,10 +207,4 @@ pn.ggplot.show(
   + pn.labs(x = '', y = 'Visits')
   + pn.theme_light()
 )
-```
-
-### Column {width=35%}
-
-```{python}
-GT(table_df)
 ```
