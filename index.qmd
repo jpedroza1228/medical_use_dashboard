@@ -175,7 +175,7 @@ dict(
 
 ```{python}
 #| content: valuebox
-#| title: "Average Number of Dental Visits"
+#| title: "Average Number of Dental Visits Per Year"
 #| color: primary
 
 dict(
