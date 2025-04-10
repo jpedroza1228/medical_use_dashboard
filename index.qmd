@@ -206,7 +206,7 @@ dict(
 )
 ```
 
-## Row 
+## Row {.tabset}
 
 ```{python}
 #| title: Average Number of Visits To the Dentist Between Sexes
