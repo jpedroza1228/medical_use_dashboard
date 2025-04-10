@@ -35,6 +35,8 @@ from IPython.display import Markdown
 ```
 
 ```{python}
+#| eval: false
+#| echo: false
 
 import requests
 from bs4 import BeautifulSoup
@@ -133,6 +135,13 @@ var_list = [
 sub_long_visit['variable'] = np.select(var_list, ['2019', '2020', '2021', '2022'], default = '2019').astype('object')
 sub_long_visit['stat_value'] = sub_long_visit['stat_value'].round(2) 
 
+visit_sex = [
+  (sub_long_visit['sex'] == 1),
+  (sub_long_visit['sex'] == 2)
+]
+
+sub_long_visit['sex'] = np.select(visit_sex, ['Male', 'Female'], default = 'Male').astype('object')
+
 var_list2 = [
   (sub_long_amount['variable'] == 'dvtexpy1'), 
   (sub_long_amount['variable'] == 'dvtexpy2'), 
@@ -141,7 +150,14 @@ var_list2 = [
 ]
 
 sub_long_amount['variable'] = np.select(var_list2, ['2019', '2020', '2021', '2022'], default = '2019').astype('object')
-sub_long_amount['stat_value'] = sub_long_amount['stat_value'].round(2) 
+sub_long_amount['stat_value'] = sub_long_amount['stat_value'].round(2)
+
+amount_sex = [
+  (sub_long_amount['sex'] == 1),
+  (sub_long_amount['sex'] == 2)
+]
+
+sub_long_amount['sex'] = np.select(amount_sex, ['Male', 'Female'], default = 'Male').astype('object')
 ```
 
 ## Row
@@ -150,8 +166,9 @@ sub_long_amount['stat_value'] = sub_long_amount['stat_value'].round(2)
 #| content: valuebox
 #| title: "Male Percentage in Sample"
 #| color: primary
+
 dict(
-  icon = 'card-list',
+  icon = 'people',
   value = 47.03 # male_pct.round(2)
 )
 ```
@@ -160,8 +177,9 @@ dict(
 #| content: valuebox
 #| title: "Average Number of Dental Visits"
 #| color: primary
+
 dict(
-  icon = 'card-list',
+  icon = 'folder',
   value = 0.87 # sub_long_visit.loc[(sub_long_visit['stat'] == 'mean')]['stat_value'].mean().round(2)
 )
 ```
@@ -170,44 +188,50 @@ dict(
 #| content: valuebox
 #| title: "Average Amount Spent on Dental Care"
 #| color: primary
+
 dict(
   icon = 'cash-coin',
   value = 331.01 # sub_long_amount.loc[(sub_long_visit['stat'] == 'mean')]['stat_value'].mean().round(2)
 )
 ```
 
-## Row
+```{python}
+#| content: valuebox
+#| title: "Max Amount Spent on Dental Care by One Person"
+#| color: primary
 
-### Column {width=65%}
+dict(
+  icon = 'cash-coin',
+  value = 35000 # sub_long_amount.loc[(sub_long_visit['stat'] == 'max')]['stat_value'].max()
+)
+```
+
+## Row {.tabset}
 
 ```{python}
-#| title: Number of Visits To the Dentist Between Sexes
+#| title: Average Number of Visits To the Dentist Between Sexes
 
 pn.ggplot.show(
-  pn.ggplot(sub_long_visit, pn.aes('variable', 'stat_value'))
+  pn.ggplot(sub_long_visit.loc[sub_long_visit['stat'] == 'mean'], pn.aes('variable', 'stat_value'))
   + pn.geom_line(pn.aes(color = 'factor(sex)', group = 'factor(sex)'))
-  #+ pn.geom_text(pn.aes(label = 'stat_value'), color = 'black')
-  + pn.facet_wrap('stat', scales = 'free', ncol = 1)
+  + pn.geom_text(pn.aes(label = 'stat_value', color = 'factor(sex)'), nudge_x = .1, nudge_y = -.01)
+  #+ pn.facet_wrap('stat', scales = 'free', ncol = 1)
   + pn.labs(x = '', y = 'Visits')
+  + pn.scale_color_brewer('qual', 'Dark2')
   + pn.theme_light()
 )
 ```
 
 ```{python}
-#| title: Amount Spent At the Dentist Between Sexes
+#| title: Average Amount Spent At the Dentist Between Sexes
 
 pn.ggplot.show(
-  pn.ggplot(sub_long_amount, pn.aes('variable', 'stat_value'))
+  pn.ggplot(sub_long_amount.loc[sub_long_amount['stat'] == 'mean'], pn.aes('variable', 'stat_value'))
   + pn.geom_line(pn.aes(color = 'factor(sex)', group = 'factor(sex)'))
-  #+ pn.geom_text(pn.aes(label = 'stat_value'), color = 'black')
-  + pn.facet_wrap('stat', scales = 'free', ncol = 1)
-  + pn.labs(x = '', y = 'Visits')
+  + pn.geom_text(pn.aes(label = 'stat_value', color = 'factor(sex)'), nudge_x = .2, nudge_y = -.14)
+  #+ pn.facet_wrap('stat', scales = 'free', ncol = 1)
+  + pn.labs(x = '', y = 'Amount')
+  + pn.scale_color_brewer('qual', 'Dark2')
   + pn.theme_light()
 )
-```
-
-### Column {width=35%}
-
-```{python}
-GT(table_df)
 ```
