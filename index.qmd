@@ -186,7 +186,7 @@ dict(
 pn.ggplot.show(
   pn.ggplot(sub_long_visit, pn.aes('variable', 'stat_value'))
   + pn.geom_line(pn.aes(color = 'factor(sex)', group = 'factor(sex)'))
-  + pn.geom_text(pn.aes(label = 'stat_value'), color = 'black')
+  #+ pn.geom_text(pn.aes(label = 'stat_value'), color = 'black')
   + pn.facet_wrap('stat', scales = 'free', ncol = 1)
   + pn.labs(x = '', y = 'Visits')
   + pn.theme_light()
@@ -199,7 +199,7 @@ pn.ggplot.show(
 pn.ggplot.show(
   pn.ggplot(sub_long_amount, pn.aes('variable', 'stat_value'))
   + pn.geom_line(pn.aes(color = 'factor(sex)', group = 'factor(sex)'))
-  + pn.geom_text(pn.aes(label = 'stat_value'), color = 'black')
+  #+ pn.geom_text(pn.aes(label = 'stat_value'), color = 'black')
   + pn.facet_wrap('stat', scales = 'free', ncol = 1)
   + pn.labs(x = '', y = 'Visits')
   + pn.theme_light()
