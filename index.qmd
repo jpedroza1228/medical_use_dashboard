@@ -81,7 +81,7 @@ table_df = table_df.loc[(table_df[0].str.contains('^PID$|^SEX|^DVT(?:OTY|EXPY)')
 ```
 
 ```{python}
-long = pd.read_csv('/home/jon/Documents/github_repos/data_monitoring_app/panel24_long_data.csv').clean_names(case_type = 'snake')
+long = pd.read_csv('/home/jon/Documents/github_repos/medical_use_dashboard/panel24_long_data.csv').clean_names(case_type = 'snake')
 
 sub_visit = long.filter(regex = '^pid$|^sex|^dvtoty')
 sub_amount = long.filter(regex = '^pid$|^sex|^dvtexpy')
