@@ -12,6 +12,7 @@ format:
 ---
 
 ```{python}
+
 import pandas as pd
 import numpy as np
 import plotnine as pn
@@ -149,7 +150,7 @@ sub_long_amount['stat_value'] = sub_long_amount['stat_value'].round(2)
 ```{python}
 #| content: valuebox
 #| title: "Male Percentage in Sample"
-#| color: primary
+
 dict(
   icon = 'card-list',
   value = 47.03 # male_pct.round(2)
@@ -159,7 +160,7 @@ dict(
 ```{python}
 #| content: valuebox
 #| title: "Average Number of Dental Visits"
-#| color: primary
+
 dict(
   icon = 'card-list',
   value = 0.87 # sub_long_visit.loc[(sub_long_visit['stat'] == 'mean')]['stat_value'].mean().round(2)
@@ -169,7 +170,7 @@ dict(
 ```{python}
 #| content: valuebox
 #| title: "Average Amount Spent on Dental Care"
-#| color: primary
+
 dict(
   icon = 'cash-coin',
   value = 331.01 # sub_long_amount.loc[(sub_long_visit['stat'] == 'mean')]['stat_value'].mean().round(2)
