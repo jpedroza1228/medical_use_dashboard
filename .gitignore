@@ -39,3 +39,6 @@ vignettes/*.pdf
 .Renviron
 
 /.quarto/
+
+# Virtual Environment
+dashboard_venv/
